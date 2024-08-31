@@ -1,0 +1,50 @@
+# -----------------------------------------------------------------------
+# Copyright (c) 2019 SAP SE or an SAP affiliate company. All rights reserved.
+# -----------------------------------------------------------------------
+# 
+# Import the e-pustak US Product and Classification Catalogs
+#
+
+$productCatalog=ePustak-ProductCatalog
+$classificationCatalog=ePustak-Classification
+$catalogVersion=catalogversion(catalog(id[default=$productCatalog]),version[default='Staged'])[unique=true,default=$productCatalog:Staged]
+$languages=en
+$sourceContentCV = sourceVersion(catalog(id[default = $productCatalog]), version[default = 'Staged'])[unique = true, default = '$productCatalog:Staged']
+$targetContentCV = targetVersion(catalog(id[default = $productCatalog]), version[default = 'Online'])[unique = true, default = '$productCatalog:Online']
+$sourceversion = sourceversion(catalog(id[default = $productCatalog]), version[default = Staged])[unique = true, default = $productCatalog:Staged]
+$targetversion = targetversion(catalog(id[default = $productCatalog]), version[default = Online])[unique = true, default = $productCatalog:Online]
+$syncJob = sync $productCatalog:Staged->Online
+$siteUid = e-pustak
+# Product catalog
+INSERT_UPDATE Catalog;id[unique=true]
+;$productCatalog
+
+# Product versions for product catalogs
+INSERT_UPDATE CatalogVersion;catalog(id)[unique=true];version[unique=true];active;languages(isoCode);readPrincipals(uid)
+;$productCatalog;Staged;false;$languages;employeegroup
+;$productCatalog;Online;true;$languages;employeegroup
+
+# e-pustak Classification catalog
+INSERT_UPDATE ClassificationSystem;id[unique=true]
+;$classificationCatalog
+
+# Insert Classifications System Version
+INSERT_UPDATE ClassificationSystemVersion;catalog(id)[unique=true];version[unique=true];active;inclPacking[virtual=true,default=true];inclDuty[virtual=true,default=true];inclFreight[virtual=true,default=true];inclAssurance[virtual=true,default=true]
+;$classificationCatalog;1.0;true
+
+# Create default tax row for all products in product catalog
+INSERT_UPDATE TaxRow;$catalogVersion;tax(code)[unique=true];pg(code)[unique=true];ug(code)[unique=true]
+;;us-sales-tax-full;us-sales-tax-full;us-taxes
+
+INSERT_UPDATE CatalogVersion; catalog(id)[unique = true]; version[unique = true]; readPrincipals(uid)[mode = append]; writePrincipals(uid)[mode = append];
+                            ; $productCatalog           ; Staged                ;                                   ; cmsmanagergroup,$siteUid-cmsmanagergroup
+                            ; $productCatalog           ; Online                ;                                   ; cmsmanagergroup,$siteUid-cmsmanagergroup
+                            ; $productCatalog           ; Staged                ;                                   ; cmsmanagergroup,$siteUid-cmsmanagergroup
+                            ; $productCatalog           ; Online                ;                                   ; cmsmanagergroup,$siteUid-cmsmanagergroup
+
+INSERT_UPDATE CatalogVersionSyncJob; code[unique = true]; syncPrincipals(uid)[mode = append]       ; syncPrincipalsOnly; sessionUser(uid); $sourceContentCV; $targetContentCV
+                                   ; $syncJob           ; cmsmanagergroup,$siteUid-cmsmanagergroup ; true              ; cmssyncuser     ;                 ;
+
+INSERT_UPDATE SyncAttributeDescriptorConfig; syncJob(code)[default = synjobName][unique = true][path-delimiter = !]; attributeDescriptor(enclosingType(code), qualifier)[unique = true]; includedInSync; copyByValue[default = false]; presetValue; translateValue[default = false]; untranslatable[default = false]
+                                           ; $syncJob                                                              ; AbstractCMSComponent:slots                                        ; false         ;                             ;            ;                                ;
+                                           ; $syncJob                                                              ; SimpleCMSComponent:containers                                     ; false         ;                             ;            ;                                ;

@@ -1,0 +1,15 @@
+# -----------------------------------------------------------------------
+# Copyright (c) 2019 SAP SE or an SAP affiliate company. All rights reserved.
+# -----------------------------------------------------------------------
+# 
+# Import the Bracco US BaseStore
+#
+# Localization en
+#
+
+$lang=en
+
+$storeUid=bracco-us
+
+UPDATE BaseStore;uid[unique=true];name[lang=$lang]
+;$storeUid;"Bracco US Store";

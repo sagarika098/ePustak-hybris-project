@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application xmlns="http://www.zeroturnaround.com">
+  <classpath>
+    <dir name="D:\book_shop_setup\core-customize\hybris\bin\custom\ePustak\ePustakbackoffice/backoffice/classes" />
+  </classpath>
+</application>
